@@ -1,0 +1,9 @@
+{{ range $model := .data }}
+CREATE TABLE IF NOT EXISTS {{ $model.Name }} (
+    {{ range $key, $value := $model.Fields }}
+    {{ $value.DB.Name }} {{ $value.DB.Type }}({{ $value.DB.Length }}) {{ if not $value.DB.Nullable }}NOT NULL{{ else }} DEFAULT NULL{{- end }},
+    {{ if $value.DB.Primary }}PRIMARY KEY({{ $value.DB.Name }}),{{- end }}
+    {{- end}}
+);
+{{- end}}
+

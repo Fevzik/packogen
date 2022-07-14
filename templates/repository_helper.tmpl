@@ -1,0 +1,93 @@
+package repository
+
+
+import (
+    "strings"
+    "strconv"
+    "fmt"
+
+
+    "{{ .repo }}/internal/constants"
+    "github.com/jmoiron/sqlx"
+)
+
+func filterHelper(params map[string]interface{}) (string, string, string, string) {
+    whereCondition := ""
+    offsetStr := ""
+    limitStr := ""
+    orderByStr := "ORDER BY id ASC"
+    conditions := []string{}
+    page := 0
+    limit := 0
+    offset := 0
+    for k, v := range params {
+        if k == constants.ParamKeyPage {
+            page = v.(int)
+            continue
+        }
+        if k == constants.ParamKeyLimit {
+            limit = v.(int)
+            continue
+        }
+        if k == constants.ParamKeyOrderBy {
+            orderArray := []string{}
+            for field, direction := range v.(map[string]interface{}) {
+                orderArray = append(orderArray, field + " " + direction.(string))
+            }
+            if len(orderArray) > 0 {
+                orderByStr = "ORDER BY " + strings.Join(orderArray, ", ")
+            }
+            continue
+        }
+        if v != nil && len(v.(string)) > 0 {
+            condStr := k + " = :" + k
+            conditions = append(conditions, condStr)
+        }
+    }
+    if len(conditions) > 0 {
+        whereCondition = "WHERE " + strings.Join(conditions, " AND ")
+    }
+    if limit > 0 {
+        if page > 1 {
+            offset = (page - 1) * limit
+            offsetStr = " OFFSET " + strconv.Itoa(offset)
+        }
+        limitStr = " LIMIT " + strconv.Itoa(limit)
+    }
+
+    return whereCondition, orderByStr, limitStr, offsetStr
+}
+
+func processFilters(params map[string]interface{}, tableName string, db *sqlx.DB) (string, []interface{}, error) {
+    whereCondition, orderByStr, limitStr, offsetStr := filterHelper(params)
+    sql := fmt.Sprintf("SELECT * FROM %s %s %s %s %s", tableName, whereCondition, orderByStr, limitStr, offsetStr)
+    query, args, err := sqlx.Named(sql, params)
+    query = db.Rebind(query)
+
+    return query, args, err
+}
+
+func processInsert(arg map[string]interface{}, tableName string, db *sqlx.DB) (string, []interface{}, error) {
+    keys := []string{}
+    for k, _ := range arg {
+        keys = append(keys, k)
+    }
+    sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", tableName, strings.Join(keys, ", "), ":" + strings.Join(keys, ", :"))
+    query, args, err := sqlx.Named(sql, arg)
+    query = db.Rebind(query)
+
+    return query, args, err
+}
+
+func processUpdate(arg map[string]interface{}, tableName string, db *sqlx.DB) (string, []interface{}, error) {
+    updates := []string{}
+    for k, _ := range arg {
+        upString := k + " = :" + k
+        updates = append(updates, upString)
+    }
+    sql := fmt.Sprintf("UPDATE %s SET %s", tableName, strings.Join(updates, ", "))
+    query, args, err := sqlx.Named(sql, arg)
+    query = db.Rebind(query)
+
+    return query, args, err
+}

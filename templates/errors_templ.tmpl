@@ -1,0 +1,61 @@
+package errors
+
+import (
+    "strconv"
+)
+
+const (
+    ErrUnknown = iota + 1
+    ErrInvalidRequest
+    ErrDbQueryExecution
+    ErrFileCopy
+    ErrFileCreate
+    ErrFileDelete
+    ErrFileMove
+    ErrFormParse
+)
+
+type Error struct {
+    Code uint64 `json:"code" xml:"code" form:"code"`
+    Msg string `json:"msg" xml:"msg" form:"msg"`
+}
+
+func (e Error) Error() string {
+    return strconv.FormatUint(e.Code, 10) + ":" + e.Msg
+}
+
+func New(code uint64, msg string) error {
+    return &Error{Code: code, Msg: msg}
+}
+
+func Unknown() error {
+    return New(ErrUnknown, "Неизвестная ошибка")
+}
+
+func InvalidRequest() error {
+    return New(ErrInvalidRequest, "Некорретный запрос")
+}
+
+func DbQueryExecution() error {
+    return New(ErrDbQueryExecution, "Ошибка выполнения запроса к базе данных")
+}
+
+func FileCopy() error {
+    return New(ErrFileCopy, "Ошибка копирования файла")
+}
+
+func FileCreate() error {
+    return New(ErrFileCreate, "Ошибка создания файла")
+}
+
+func FileDelete() error {
+    return New(ErrFileDelete, "Ошибка удаления файла")
+}
+
+func FileMove() error {
+    return New(ErrFileMove, "Ошибка перемещения файла")
+}
+
+func FormParse() error {
+    return New(ErrFormParse, "Ошибка парсинга формы")
+}

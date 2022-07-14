@@ -1,0 +1,177 @@
+package handler
+
+
+import (
+    "strings"
+    "strconv"
+
+
+    "{{ .repo }}/internal/errors"
+    "{{ .repo }}/internal/form"
+    "{{ .repo }}/internal/domain"
+    "{{ .repo }}/internal/constants"
+    "{{ .repo }}/internal/response"
+    "github.com/gofiber/fiber/v2"
+)
+
+// Create{{ .name }} godoc
+// @Tags {{ .name }}
+// @Summary Создание {{ .name }}
+// @Description Создание {{ .name }}
+// @Accept  json
+// @Produce  json
+// @Param RequestBody body form.{{ .name }}AddForm true "{{ .name }} data"
+// @Success 201 {object} response.StatusResponse
+// @Router /{{ .nameLC }} [post]
+// @Security ApiKeyAuth
+func (h *Handler) Create{{ .name }}(c *fiber.Ctx) error {
+    formData := new(form.{{ .name }}AddForm)
+    err := c.BodyParser(formData)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, errors.FormParse().Error())
+    }
+    err = formData.Validate()
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    obj :=  new(domain.{{ .name }})
+    formData.PrepareData(obj)
+
+    err = h.services.{{ .name }}.Create(obj)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    return c.JSON(response.StatusResponse{Status: true})
+}
+
+// Save{{ .name }} godoc
+// @Tags {{ .name }}
+// @Summary Редактирование {{ .name }}
+// @Description Редактирование {{ .name }}
+// @Accept  json
+// @Produce  json
+// @Param id path string true "{{ .name }} ID"
+// @Param RequestBody body form.{{ .name }}EditForm true "{{ .name }} data"
+// @Success 200 {object} response.StatusResponse
+// @Router /{{ .nameLC }}/{id} [put]
+// @Security ApiKeyAuth
+func (h *Handler) Save{{ .name }}(c *fiber.Ctx) error {
+    id := c.Params(constants.ParamKeyId)
+    if len(id) != constants.UidLength {
+        return fiber.NewError(fiber.StatusInternalServerError, errors.InvalidRequest().Error())
+    }
+    formData := new(form.{{ .name }}EditForm)
+    err := c.BodyParser(formData)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, errors.FormParse().Error())
+    }
+    err = formData.Validate()
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    obj, err := h.services.{{ .name }}.GetOne(id)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    formData.PrepareData(obj)
+
+    err = h.services.{{ .name }}.Save(obj)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    return c.JSON(response.StatusResponse{Status: true})
+}
+
+// Delete{{ .name }} godoc
+// @Tags {{ .name }}
+// @Summary Удаление {{ .name }}
+// @Description Удаление {{ .name }}
+// @Accept  json
+// @Produce  json
+// @Param id path string true "{{ .name }} ID"
+// @Success 200 {object} response.StatusResponse
+// @Router /{{ .nameLC }}/{id} [delete]
+// @Security ApiKeyAuth
+func (h *Handler) Delete{{ .name }}(c *fiber.Ctx) error {
+    id := c.Params(constants.ParamKeyId)
+    if len(id) != constants.UidLength {
+        return fiber.NewError(fiber.StatusInternalServerError, errors.InvalidRequest().Error())
+    }
+    obj, err := h.services.{{ .name }}.GetOne(id)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    err = h.services.{{ .name }}.Delete(obj.ID)
+    if err != nil {
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    return c.JSON(response.StatusResponse{Status: true})
+}
+
+// GetOne{{ .name }} godoc
+// @Tags {{ .name }}
+// @Summary Получение информации {{ .name }}
+// @Description Получение информации {{ .name }}
+// @Accept  json
+// @Produce  json
+// @Param id path string true "{{ .name }} ID"
+// @Success 200 {object} domain.{{ .name }}
+// @Router /{{ .nameLC }}/{id} [get]
+// @Security ApiKeyAuth
+func (h *Handler) GetOne{{ .name }}(c *fiber.Ctx) error {
+    id := c.Params(constants.ParamKeyId)
+    if len(id) != constants.UidLength {
+        return fiber.NewError(fiber.StatusInternalServerError, errors.InvalidRequest().Error())
+    }
+    obj, err := h.services.{{ .name }}.GetOne(id)
+    if err != nil {
+        if strings.Contains(err.Error(), "no rows") {
+            return c.JSON(nil)
+        }
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    return c.JSON(obj)
+}
+
+// GetList{{ .name }} godoc
+// @Tags {{ .name }}
+// @Summary Получение списка {{ .name }}
+// @Description Получение списка {{ .name }}
+// @Accept  json
+// @Produce  json
+{{- range $field := .fields}}
+{{- if $field.Search}}
+// @Param {{ $field.Json }} query {{ $field.Type }} false "{{ $field.Json }}"
+{{- end}}
+{{- end}}
+// @Param page query int false "Page"
+// @Param limit query int false "Per page limit"
+// @Success 200 {array} domain.{{ .name }}
+// @Router /{{ .nameLC }} [get]
+// @Security ApiKeyAuth
+func (h *Handler) GetList{{ .name }}(c *fiber.Ctx) error {
+    params := make(map[string]interface{})
+
+    pageStr := strings.TrimSpace(c.Query(constants.ParamKeyPage))
+    pageInt, _ := strconv.Atoi(pageStr)
+    params[constants.ParamKeyPage] = pageInt
+
+    limitStr := strings.TrimSpace(c.Query(constants.ParamKeyLimit))
+    limitInt, _ := strconv.Atoi(limitStr)
+    params[constants.ParamKeyLimit] = limitInt
+
+    {{range $field := .fields}}
+    {{- if $field.Search}}
+    params["{{ $field.DB.Name }}"] = strings.TrimSpace(c.Query("{{$field.Json}}"))
+    {{- end}}
+    {{- end}}
+
+    objects, err := h.services.{{ .name }}.GetList(params)
+    if err != nil {
+        if strings.Contains(err.Error(), "no rows") {
+            return c.JSON([]domain.{{ .name }}{})
+        }
+        return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+    }
+    return c.JSON(objects)
+}

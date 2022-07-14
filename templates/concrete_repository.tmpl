@@ -1,0 +1,54 @@
+package repository
+
+
+import (
+    "fmt"
+
+
+    "{{ .repo }}/internal/domain"
+    "{{ .repo }}/internal/constants"
+    "github.com/jmoiron/sqlx"
+)
+
+
+type {{ .name }}Repository struct {
+    db *sqlx.DB
+}
+
+func New{{ .name }}Repository(db *sqlx.DB) *{{ .name }}Repository {
+    return &{{ .name }}Repository{db: db}
+}
+
+func (r *{{ .name }}Repository) Create(data *domain.{{ .name }}) error {
+    arg := data.Bind()
+    query, args, err := processInsert(arg, constants.{{.name}}TableName, r.db)
+    _, err = r.db.Exec(query, args...)
+    return err
+}
+
+func (r *{{ .name }}Repository) GetOne(id string) (*domain.{{ .name }}, error) {
+    var item domain.{{ .name }}
+    sql := fmt.Sprintf("SELECT * FROM %s WHERE %s = $1", constants.{{ .name }}TableName, constants.ParamKeyId)
+    err := r.db.Get(&item, sql, id)
+    return &item, err
+}
+
+func (r *{{ .name }}Repository) GetList(params map[string]interface{}) ([]domain.{{ .name }}, error) {
+    list := []domain.{{ .name }}{}
+    query, args, err := processFilters(params, constants.{{.name}}TableName, r.db)
+    err = r.db.Select(&list, query, args...)
+    return list, err
+}
+
+func (r *{{ .name }}Repository) Save(data *domain.{{ .name }}) error {
+    arg := data.Bind()
+    query, args, err := processUpdate(arg, constants.{{.name}}TableName, r.db)
+    _, err = r.db.Exec(query, args...)
+    return err
+}
+
+func (r *{{ .name }}Repository) Delete(id string) error {
+    sql := fmt.Sprintf("DELETE FROM %s WHERE id = $1", constants.{{.name}}TableName)
+    _, err := r.db.Exec(sql, id)
+    return err
+}

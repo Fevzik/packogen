@@ -1,0 +1,155 @@
+rootDir: "../"
+project: "pkg_photo_report"
+repo: "gitlab.krtech.ru/portal-2/pkg_photo_report"
+serviceCode: "photo_report"
+serviceLabel: "Фото отчеты"
+models:
+  PhotoReport:
+    name: "PhotoReport"
+    dbName: "PhotoReport"
+    fields:
+      ID:
+        type: "string"
+        db:
+          name: "id"
+          primary: true
+          index: true
+          type: "uuid"
+          length: 36
+          nullable: false
+        json: "id"
+      Alias:
+        type: "string"
+        db:
+          name: "alias"
+          type: "varchar"
+          length: 150
+          nullable: false
+        json: "alias"
+        form:
+          validation:
+            - min: 1
+            - max: 150
+          add: true
+          edit: true
+        search: true
+      Title:
+        type: "string"
+        db:
+          name: "title"
+          type: "varchar"
+          length: 2048
+          nullable: false
+        json: "title"
+        form:
+          validation:
+            - min: 3
+            - max: 2048
+          add: true
+          edit: true
+        search: true
+      Description:
+        type: "string"
+        db:
+          name: "description"
+          type: "varchar"
+          length: 2048
+          nullable: false
+        json: "title"
+        form:
+          validation:
+            - min: 3
+            - max: 2048
+          add: true
+          edit: true
+        search: true
+      PublishedAt:
+        type: "time.Time"
+        db:
+          name: "published_at"
+          type: "date"
+          nullable: false
+        json: "publishedAt"
+        form:
+          add: true
+          edit: true
+        search: true
+      IsPublished:
+        type: "bool"
+        db:
+          name: "is_published"
+          type: "boolean"
+          nullable: false
+          default: true
+        json: "isPublished"
+        form:
+          add: true
+          edit: true
+        search: true
+      IsDeleted:
+        type: "bool"
+        db:
+          name: "is_deleted"
+          type: "boolean"
+          nullable: false
+          default: false
+        json: "isDeleted"
+        form:
+          add: true
+          edit: true
+        search: true
+      AuthorId:
+        type: "int"
+        db:
+          name: "author_id"
+          type: "integer"
+          nullable: false
+        json: "authorId"
+        form:
+          add: true
+          edit: true
+        search: true
+      TatarstanOldId:
+        type: "int"
+        db:
+          name: "tatarstan_old_id"
+          type: "integer"
+          nullable: true
+        json: "tatarstanOldId"
+        form:
+          add: true
+          edit: true
+        search: true
+      ViewsCounter:
+        type: "int"
+        db:
+          name: "views_counter"
+          type: "integer"
+          nullable: true
+        json: "viewsCounter"
+        form:
+          add: true
+          edit: true
+        search: true
+      IsSearchIndexed:
+        type: "int"
+        db:
+          name: "is_search_indexed"
+          type: "integer"
+          nullable: true
+        json: "isSearchIndexed"
+        form:
+          add: true
+          edit: true
+        search: true
+      Seo:
+        type: "string"
+        db:
+          name: "seo"
+          type: "json"
+          nullable: true
+        json: "seo"
+        form:
+          add: true
+          edit: true
+        search: true

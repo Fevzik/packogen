@@ -1,0 +1,22 @@
+package constants
+
+
+const (
+    ApiPrefix = "/api"
+    ModuleCode = "{{ .serviceCode }}"
+    ModuleLabel = "{{ .serviceLabel }}"
+    ParamKeyId = "id"
+    UidLength = 36
+    ParamKeyPage = "page"
+    ParamKeyLimit = "limit"
+    ParamKeyOrderBy = "orderBy"
+
+    {{ range $model := .models }}
+        {{$model.Name}}TableName = "{{$model.NameLC}}"
+    {{- end }}
+)
+
+var (
+    EtcdHosts = []string{}
+    AmqpDSN = ""
+)

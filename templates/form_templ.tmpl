@@ -1,0 +1,98 @@
+package form
+
+
+import (
+    "{{ .repo }}/internal/errors"
+    "{{ .repo }}/internal/domain"
+    "github.com/google/uuid"
+)
+
+{{ if .data.Add }}
+type {{ .data.Name }}AddForm struct {
+    {{ range $key, $value := .data.Fields }}
+    {{- if $value.Form.Add}}
+        {{ $key }} {{ $value.Type }} `json:"{{ $value.Json }}"`
+    {{- end}}
+    {{- end}}
+}
+{{- end}}
+{{ if .data.Edit }}
+type {{ .data.Name }}EditForm struct {
+    {{ range $key, $value := .data.Fields }}
+    {{- if $value.Form.Edit}}
+    {{ $key }} {{ $value.Type }} `json:"{{ $value.Json }}"`
+    {{- end}}
+    {{- end}}
+}
+{{- end}}
+
+{{- if .data.Add }}
+func (f *{{ .data.Name }}AddForm) Validate() error {
+    {{- range $key, $value := .data.Fields }}
+        {{ if $value.Form.Add }}
+            {{ if $value.Form.Validation }}
+                {{ range $mKey, $validMap := $value.Form.Validation }}
+                    {{ range $validKey, $validValue := $validMap }}
+                        {{ if eq (print $validKey) "min" }}
+                            if len(f.{{ $key }}) < {{ $validValue }} {
+                                return errors.FormParse()
+                            }
+                        {{ end }}
+                        {{ if eq (print $validKey) "max" }}
+                            if len(f.{{ $key }}) > {{ $validValue }} {
+                                return errors.FormParse()
+                            }
+                        {{ end }}
+                    {{- end}}
+                {{- end}}
+            {{ end }}
+        {{ end }}
+    {{- end}}
+    return nil
+}
+
+func (f *{{ .data.Name }}AddForm) PrepareData(m *domain.{{ .data.Name }}) {
+    m.ID = uuid.New().String()
+    {{- range $key, $value := .data.Fields }}
+            {{- if $value.Form.Add }}
+                {{ if $value.Form }}m.{{ $key }} = f.{{ $key }}{{- end}}
+            {{- end}}
+    {{- end}}
+}
+{{- end }}
+
+{{ if .data.Edit }}
+func (f *{{ .data.Name }}EditForm) Validate() error {
+    {{- range $key, $value := .data.Fields }}
+        {{- if $value.Form }}
+            {{- if $value.Form.Edit }}
+            {{- if $value.Form.Validation }}
+                {{- range $mKey, $validMap := $value.Form.Validation }}
+                    {{- range $validKey, $validValue := $validMap }}
+                        {{- if eq (print $validKey) "min" }}
+                            if len(f.{{ $key }}) < {{ $validValue }} {
+                                return errors.FormParse()
+                            }
+                        {{- end }}
+                        {{- if eq (print $validKey) "max" }}
+                            if len(f.{{ $key }}) > {{ $validValue }} {
+                                return errors.FormParse()
+                            }
+                        {{- end }}
+                    {{- end}}
+                {{- end}}
+            {{- end }}
+            {{- end }}
+        {{ end }}
+    {{- end}}
+    return nil
+}
+
+func (f *{{ .data.Name }}EditForm) PrepareData(m *domain.{{ .data.Name }}) {
+    {{- range $key, $value := .data.Fields }}
+            {{- if $value.Form.Edit }}
+                {{ if $value.Form }}m.{{ $key }} = f.{{ $key }}{{- end}}
+            {{- end}}
+    {{- end}}
+}
+{{ end }}

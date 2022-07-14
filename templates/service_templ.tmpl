@@ -1,0 +1,23 @@
+package service
+
+
+import (
+    "{{ .repo }}/internal/repository"
+)
+
+
+var Services *Service
+
+type Service struct {
+    {{ range $serv := .services }}
+    {{ $serv }}
+    {{- end }}
+}
+
+func NewService(r *repository.Repository) * Service{
+    return &Service{
+        {{ range $serv := .services }}
+            {{ $serv }}: New{{ $serv }}Service(r.{{ $serv }}),
+        {{- end }}
+    }
+}

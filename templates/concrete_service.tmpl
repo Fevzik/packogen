@@ -1,0 +1,37 @@
+package service
+
+
+import (
+    "{{ .repo }}/internal/domain"
+    "{{ .repo }}/internal/repository"
+)
+
+
+type {{ .name }}Service struct {
+    repo repository.{{ .name }}
+}
+
+
+func New{{ .name }}Service(repo repository.{{ .name }}) *{{ .name }}Service {
+    return &{{ .name }}Service{repo: repo}
+}
+
+func (s *{{ .name }}Service) Create(data *domain.{{ .name }}) error {
+    return s.repo.Create(data)
+}
+
+func (s *{{ .name }}Service) GetOne(id string) (*domain.{{ .name }}, error) {
+    return s.repo.GetOne(id)
+}
+
+func (s *{{ .name }}Service) GetList(params map[string]interface{}) ([]domain.{{ .name }}, error) {
+    return s.repo.GetList(params)
+}
+
+func (s *{{ .name }}Service) Save(data *domain.{{ .name }}) error {
+    return s.repo.Save(data)
+}
+
+func (s *{{ .name }}Service) Delete(id string) error {
+    return s.repo.Delete(id)
+}

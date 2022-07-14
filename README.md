@@ -1,2 +1,3 @@
-# packogen
-Golang clean architecture code generator
+# codegen
+
+Черновая версия кодогенератора пакетов для микросервисной архитектуры

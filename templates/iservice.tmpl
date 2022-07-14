@@ -1,0 +1,16 @@
+package service
+
+
+import (
+    "{{ .repo }}/internal/domain"
+)
+
+{{ range $service := .services}}
+type {{ $service }} interface {
+    Create(data *domain.{{ $service }}) error
+    GetOne(id string) (*domain.{{ $service }}, error)
+    GetList(params map[string]interface{}) ([]domain.{{ $service }}, error)
+    Save(data *domain.{{ $service }}) error
+    Delete(id string) error
+}
+{{end}}

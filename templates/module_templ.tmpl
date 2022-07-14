@@ -1,0 +1,55 @@
+package {{ .packageName }}
+
+import (
+	"{{ .repo }}/internal/constants"
+	"{{ .repo }}/internal/handler"
+	_ "{{ .repo }}/internal/queue"
+	"{{ .repo }}/internal/repository"
+	"{{ .repo }}/internal/service"
+	packer "gitlab.krtech.ru/go-utils/packer"
+
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/jmoiron/sqlx"
+)
+
+type Module struct {
+	Config *packer.ModuleConfig
+}
+
+func New() interface{} {
+	return &Module{Config: &packer.ModuleConfig{}}
+}
+
+func (f *Module) GetConfig() *packer.ModuleConfig {
+	return f.Config
+}
+
+func (f *Module) GetStore() *sqlx.DB {
+	return f.Config.Store
+}
+
+func (f *Module) ImportRoutes(app *fiber.App, mode string) {
+	rep := repository.NewRepository(f.GetStore())
+	services := service.NewService(rep)
+	service.Services = services
+	h := handler.NewHandler(services)
+	h.Init(app, mode)
+}
+
+func (f *Module) GetModuleCode() string {
+	return constants.ModuleCode
+}
+
+func (f *Module) GetModuleLabel() string {
+	return constants.ModuleLabel
+}
+
+func (f *Module) SetEtcdConnector(s []string) {
+	constants.EtcdHosts = s
+}
+
+func (f *Module) SetAmqpConnector(s string) {
+	constants.AmqpDSN = s
+}
+

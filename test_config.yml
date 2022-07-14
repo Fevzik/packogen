@@ -1,0 +1,166 @@
+rootDir: "../"
+project: "gen_library"
+repo: "library"
+serviceCode: "library"
+serviceLabel: "Библиотека"
+models:
+  book:
+    name: "book"
+    dbName: "books"
+    fields:
+      ID:
+        type: "string"
+        db:
+          name: "id"
+          primary: true
+          index: true
+          type: "varchar"
+          length: 36
+          nullable: false
+        json: "id"
+      Title:
+        type: "string"
+        db:
+          name: "title"
+          type: "varchar"
+          length: 256
+          nullable: false
+        json: "title"
+        form:
+          validation:
+            - min: 3
+            - max: 256
+          add: true
+          edit: true
+        search: true
+      PublishedAt:
+        type: "time.Time"
+        db:
+          name: "published_at"
+          type: "date"
+          nullable: false
+        json: "publishedAt"
+        form:
+          add: true
+          edit: true
+        search: true
+      Price:
+        type: "float64"
+        db:
+          name: "price"
+          type: "decimal"
+        json: "price"
+        form:
+          add: true
+          edit: true
+    relations:
+      author:
+        type: 2
+        fields:
+          self: ID
+          related: ID
+      genre:
+        type: 2
+        fields:
+          self: ID
+          related: ID
+  author:
+    name: "author"
+    dbName: "authors"
+    fields:
+      ID:
+        type: "string"
+        db:
+          name: "id"
+          primary: true
+          index: true
+          type: "varchar"
+          length: 36
+          nullable: false
+        json: "id"
+      FirstName:
+        type: "string"
+        db:
+          name: "first_name"
+          type: "varchar"
+          length: 64
+          nullable: false
+        json: "firstName"
+        form:
+          validation:
+            - min: 3
+            - max: 64
+          add: true
+          edit: true
+        search: true
+      SecondName:
+        type: "string"
+        db:
+          name: "second_name"
+          type: "varchar"
+          length: 64
+          nullable: false
+        json: "secondName"
+        form:
+          validation:
+            - min: 3
+            - max: 64
+          add: true
+          edit: true
+        search: true
+      LastName:
+        type: "string"
+        db:
+          name: "last_name"
+          type: "varchar"
+          length: 64
+          nullable: false
+        json: "lastName"
+        form:
+          validation:
+            - min: 3
+            - max: 64
+          add: true
+          edit: true
+        search: true
+    relations:
+      book:
+        type: 2
+        fields:
+          self: ID
+          related: ID
+  genre:
+    name: "genre"
+    dbName: "genres"
+    fields:
+      ID:
+        type: "string"
+        db:
+          name: "id"
+          primary: true
+          index: true
+          type: "varchar"
+          length: 36
+          nullable: false
+        json: "id"
+      Title:
+        type: "string"
+        db:
+          name: "title"
+          type: "varchar"
+          length: 128
+          nullable: false
+        json: "title"
+        form:
+          validation:
+            - min: 5
+            - max: 128
+          add: true
+          edit: true
+        search: true
+    relations:
+      book:
+        type: 2
+        fields:
+          self: ID
+          related: ID

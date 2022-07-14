@@ -1,0 +1,15 @@
+package domain
+
+type {{ .data.Name }} struct {
+    {{ range $key, $value := .data.Fields }}
+    {{ $key }} {{ $value.Type }} `json:"{{ $value.Json }}" db:"{{ $value.DB.Name }}"`
+    {{- end}}
+}
+
+func (m *{{ .data.Name }}) Bind() map[string]interface{} {
+    binds := make(map[string]interface{})
+    {{ range $key, $value := .data.Fields }}
+        binds["{{ $value.DB.Name }}"] = m.{{ $key }}
+    {{- end}}
+    return binds
+}

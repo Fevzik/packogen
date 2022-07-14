@@ -1,0 +1,77 @@
+package main
+
+import (
+    "flag"
+    "fmt"
+    "log"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "{{ .repo }}"
+
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/logger"
+    "github.com/jmoiron/sqlx"
+    _ "github.com/lib/pq"
+    packer "gitlab.krtech.ru/go-utils/packer"
+)
+
+var (
+    logFormat = "[${time}] ${status} - ${latency} ${method} ${path}\n"
+    Conn *sqlx.DB
+    appPort = flag.String("appPort", "9001", "application start port")
+    dbHost = flag.String("dbHost", "127.0.0.1", "database host(default localhost)")
+    dbUser = flag.String("dbUser", "test_user", "database user")
+    dbPassword = flag.String("dbPassword", "test_pass", "database password")
+    dbName = flag.String("dbName", "test_db", "database name")
+    dbPort = flag.String("dbPort", "5432", "database port")
+)
+
+func connectDb() {
+    db, err := sqlx.Connect("postgres",
+        fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
+            *dbUser, *dbPassword, *dbHost, *dbPort, *dbName))
+    if err != nil {
+        log.Fatalln(err)
+    }
+    Conn = db
+}
+
+func main() {
+    flag.Parse()
+    connectDb()
+
+    app := fiber.New()
+    app.Use(logger.New(logger.Config{
+        Format: logFormat,
+        Output: os.Stdout,
+    }))
+
+    err := packer.InitModule({{ .repo }}.New(), packer.ModuleConfig{
+        InitMode:       packer.InitModeSA,
+        RouterInitMode: packer.HttpModeFull,
+        Server:         app,
+        Store:          Conn,
+    })
+
+    if err != nil {
+        log.Fatalf("ошибка инициализации модуля: %s", err.Error())
+    }
+
+    //start server
+    go func() {
+        if err = app.Listen(":" + *appPort); err != nil {
+            log.Panicf("не удалось запустить инстанс веб-сервера: %s", err.Error())
+        }
+    }()
+
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+    _ = <-c
+    fmt.Println("Остановка веб-сервера...")
+    _ = app.Shutdown()
+    Conn.Close()
+    fmt.Println("--> соединение с базой данных закрыто")
+    fmt.Println("--> сервис остановлен")
+}

@@ -1,0 +1,36 @@
+package handler
+
+
+import (
+    "github.com/gofiber/fiber/v2"
+    _ "gitlab.krtech.ru/go-utils/packer"
+    "{{ .repo }}/internal/service"
+    "{{ .repo }}/internal/constants"
+)
+
+type Handler struct {
+    services *service.Service
+}
+
+func NewHandler(s *service.Service) *Handler {
+    return &Handler{services: s}
+}
+
+func (h *Handler) Init(app *fiber.App, mode string) *fiber.App {
+    api := app.Group(constants.ApiPrefix)
+    api.Get("/", func(c *fiber.Ctx) error {
+        return c.JSON(fiber.Map{"repository": "{{ .repo }}" } )
+    })
+    moduleGroup := api.Group("{{ .serviceCode }}")
+
+    {{ range $h := .handlers }}
+        {{ $h.NameLc }}Group := moduleGroup.Group("{{ $h.NameLc }}")
+        {{ $h.NameLc }}Group.Post("/", h.Create{{ $h.Name }})
+        {{ $h.NameLc }}Group.Put("/:" + constants.ParamKeyId, h.Save{{ $h.Name }})
+        {{ $h.NameLc }}Group.Delete("/:" + constants.ParamKeyId, h.Delete{{ $h.Name }})
+        {{ $h.NameLc }}Group.Get("/:" + constants.ParamKeyId, h.GetOne{{ $h.Name }})
+        {{ $h.NameLc }}Group.Get("/", h.GetList{{ $h.Name }})
+    {{ end }}
+
+    return app
+}
